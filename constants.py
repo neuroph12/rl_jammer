@@ -24,5 +24,5 @@ channel_a_size = n_channels + 1 # Agent can do nothing, or jam on one of the cha
 a_size = channel_a_size
 
 # sense jammer constants
-# ack - gets .48 throughput
-# control - gets .73 throughput
+# ack - gets .48 throughput, .55 reward
+# control - gets .73 throughput, .33 reward

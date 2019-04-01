@@ -7,6 +7,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--only_count', action='store', default=True)
 parser.add_argument('--even_out', action='store', default=True)
+parser.add_argument('--protocol', action='store', default="both")
 args = parser.parse_args()
 only_count = int(args.only_count)
 even_out = int(args.even_out)
@@ -16,6 +17,8 @@ all_pkl_files = glob.glob(os.path.join(PKL_DIRECTORY,"*.pkl"))
 
 all_data = None
 for pkl_file in all_pkl_files:
+	if args.protocol != "both" and args.protocol not in pkl_file:
+		continue
 	data = pickle.load(open(pkl_file, 'rb'))
 	if all_data is None:
 		all_data = data
@@ -44,7 +47,6 @@ if even_out:
 		except:
 			continue
 
-call("rm %s/*"%PKL_DIRECTORY, shell=True) # clear everything
-with open("%s/all_data.pkl"%PKL_DIRECTORY, 'wb') as f:
+with open("%s/all_data%s.pkl"%(PKL_DIRECTORY,args.protocol), 'wb') as f:
 	pickle.dump(all_data, f)
-wr.write_split(PKL_DIRECTORY,TFRECORDS_DIRECTORY) # only write train
+wr.write_split(PKL_DIRECTORY,TFRECORDS_DIRECTORY,specific_files=["all_data%s.pkl"%args.protocol])

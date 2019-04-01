@@ -47,7 +47,7 @@ def write_records(ratios):
     if ratios[2] > 0:
         test_writer = tf.python_io.TFRecordWriter(os.path.join(output_directory, 'test.tfrecord'))
 
-def write_split(data_directory, output_directory, train=True):
+def write_split(data_directory, output_directory, train=True, specific_files=None):
     
     # if train:
     #     train, val, test = (1.0, 0.0, 0.0)
@@ -63,8 +63,12 @@ def write_split(data_directory, output_directory, train=True):
     val_writer = tf.python_io.TFRecordWriter(os.path.join(output_directory, 'val.tfrecord'))  
 
     file_number = 0
+    if specific_files:
+        files_to_look_at = specific_files
+    else:
+        files_to_look_at = os.listdir(data_directory)
 
-    for file_name in os.listdir(data_directory):
+    for file_name in specific_files:
         print(file_name)
         if file_name.startswith('.'):
             continue

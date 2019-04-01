@@ -18,10 +18,12 @@ PKL_UID = args.pkl_uid
 USE_REWARD_NET = int(args.rn) # true or false - use learned reward net
 print("\n\n\nYou are running this agent using mode: %s, protocol: %s, auto run: %d, and are using reward net: %d. \n\n\n"%(RUNTIME_MODE, PROTOCOL, AUTO_RUN, USE_REWARD_NET))
 
-if AUTO_RUN and not USE_REWARD_NET:
-    RUNTIME_MODE = "gather_xp"
-else:
-    RUNTIME_MODE = RUNTIME_MODE
+# Currently various blocks commented out that had to do with gathering xp for the reward net
+# if AUTO_RUN and not USE_REWARD_NET:
+#     RUNTIME_MODE = "gather_xp"
+# else:
+#     RUNTIME_MODE = RUNTIME_MODE
+RUNTIME_MODE = RUNTIME_MODE
 
 import threading, os, multiprocessing, scipy.signal, imageio
 import numpy as np, pickle, matplotlib
@@ -384,10 +386,10 @@ class Worker():
                 # Periodically save gifs of episodes, model parameters, and summary statistics.
                
                 if episode_count % 5 == 0 and episode_count != 0:   
-                    if AUTO_RUN and not self.reward_net:
-                        if episode_count > 5000 and self.RUNTIME_MODE == "gather_xp" and smr < EARLY_STOP_REWARD:
-                            print("Done gathering bad experience, changing to train on %s."%self.name)
-                            self.RUNTIME_MODE = "normal"
+                    # if AUTO_RUN and not self.reward_net:
+                    #     if episode_count > 5000 and self.RUNTIME_MODE == "gather_xp" and smr < EARLY_STOP_REWARD:
+                    #         print("Done gathering bad experience, changing to train on %s."%self.name)
+                    #         self.RUNTIME_MODE = "normal"
                     if self.name == 'worker_10' and episode_count % 250 == 0:
                         try:
                             self.save_frames_gif(episode_count)
@@ -398,9 +400,9 @@ class Worker():
                         print("%s: Saved Model for iteration: %d."%(self.name, episode_count))
                     if episode_count % 250 == 0:
                         #print("%s: Mean reward per action: %.2f"%(self.name, np.mean(np.divide(self.episode_rewards[-50:],self.episode_lengths[-50:]))))
-                        if self.reward_net:
-                            print("%s: Confusion matrix of reward net: \n"%self.name)
-                            print(self.misses)
+                        # if self.reward_net:
+                        #     print("%s: Confusion matrix of reward net: \n"%self.name)
+                        #     print(self.misses)
                         if not self.reward_net: 
                             if self.name == "worker_0": # only saving experiences on one thread bc of dumb random number generation
                                 # save state-reward pairs for offline reward function learning
@@ -410,18 +412,23 @@ class Worker():
                     
                     mean_reward = np.mean(self.episode_rewards[-5:])
                     smr = .96 * smr + .04 * np.mean(self.episode_rewards[-5:]) # smoothed mean reward
-                    if smr > EARLY_STOP_REWARD:
-                        if self.RUNTIME_MODE == "normal":
-                            stopped_training = episode_count
-                            self.RUNTIME_MODE = "gather_xp"
-                            if self.name != "worker_0":
-                                print("Gathering xp on a different worker... exiting.")
-                                exit(0)
-                            else:
-                                print("Done training, switching to gather xp on %s"%self.name)
-                        if episode_count > stopped_training + 1e3 or self.reward_net:
-                            print("\n\nReached a mean_reward of %.3f, stopping this round because the model is assumed to have been trained well.\n\n"%mean_reward)
-                            exit(0)
+                    # if smr > EARLY_STOP_REWARD:
+                        # if self.RUNTIME_MODE == "normal":
+                        #     stopped_training = episode_count
+                        #     self.RUNTIME_MODE = "gather_xp"
+                        #     if self.name != "worker_0":
+                        #         print("Gathering xp on a different worker... exiting.")
+                        #         exit(0)
+                        #     else:
+                        #         print("Done training, switching to gather xp on %s"%self.name)
+                        # if episode_count > stopped_training + 1e3 or self.reward_net:
+                        #     print("\n\nReached a mean_reward of %.3f, stopping this round because the model is assumed to have been trained well.\n\n"%mean_reward)
+                        #     exit(0)
+                    if episode_count > 5e3 and smr > 5:
+                        print("Reached a mean_reward of %.3f, stopping this round because the model is assumed to have been trained well."%mean_reward)
+                        if self.name == "worker_2" and self.reward_net:
+                            print(self.misses)
+                        exit(0)
                    
                     mean_throughput = np.mean(self.episode_throughputs[-5:])
                     mean_length = np.mean(self.episode_lengths[-5:])
